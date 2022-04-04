@@ -3,11 +3,13 @@ from plaid.api import plaid_api
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.country_code import CountryCode
 from plaid.model.products import Products
-from plaid.model.account_subtype import AccountSubtype
-from plaid.model.account_subtypes import AccountSubtypes
-from plaid.model.depository_filter import DepositoryFilter
-from plaid.model.link_token_account_filters import LinkTokenAccountFilters
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.investments_holdings_get_request import InvestmentsHoldingsGetRequest
+# from plaid.model.account_subtype import AccountSubtype
+# from plaid.model.account_subtypes import AccountSubtypes
+# from plaid.model.depository_filter import DepositoryFilter
+# from plaid.model.link_token_account_filters import LinkTokenAccountFilters
 
 config = plaid.Configuration(
     host=plaid.Environment.Development,
@@ -46,3 +48,16 @@ def obtain_link_token(user_id):
     link_token = response['link_token']
 
     return link_token
+
+
+def exchange_public_token(public_token: str):
+    # the public token is received from Plaid Link
+    exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
+    exchange_response = client.item_public_token_exchange(exchange_request)
+    return exchange_response['access_token']
+
+
+def get_holdings(access_token):
+    holdings_request = InvestmentsHoldingsGetRequest(access_token=access_token)
+    holdings_response = client.investments_holdings_get(holdings_request)
+    return holdings_response.to_dict()

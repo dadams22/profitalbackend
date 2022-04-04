@@ -4,7 +4,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from .marketaux_api import get_market_news
-from .plaid_api import obtain_link_token
+from .plaid_api import obtain_link_token, exchange_public_token, get_holdings
 
 
 class MarketNewsView(APIView):
@@ -21,9 +21,29 @@ class PlaidTokenView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        print(self.request.user)
         user_id = self.request.user.id
-        print('user id', user_id)
         token = obtain_link_token(user_id)
-        print(token)
-        return Response({ 'link_token': token })
+        return Response({'link_token': token})
+
+
+class PlaidTokenExchangeView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        public_token = request.data.get('public_token')
+        access_token = exchange_public_token(public_token)
+        self.request.user.set_plaid_access_token(access_token)
+        return Response()
+
+
+class PlaidHoldingsView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = self.request.user
+        access_token = user.plaid_access_token
+        holdings = get_holdings(access_token)
+        print(holdings)
+        return Response(holdings)
