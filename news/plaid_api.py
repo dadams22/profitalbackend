@@ -60,4 +60,7 @@ def exchange_public_token(public_token: str):
 def get_holdings(access_token):
     holdings_request = InvestmentsHoldingsGetRequest(access_token=access_token)
     holdings_response = client.investments_holdings_get(holdings_request)
-    return holdings_response.to_dict()
+    result = holdings_response.to_dict()
+    del result['item']
+    del result['request_id']
+    return result
