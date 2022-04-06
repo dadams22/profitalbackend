@@ -1,10 +1,34 @@
 from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authtoken.models import Token
+from rest_framework import status
 
 from .marketaux_api import get_market_news
 from .plaid_api import obtain_link_token, exchange_public_token, get_holdings
+from .models import User
+from .serializers import UserSerializer
+
+
+class CreateUserView(CreateAPIView):
+    model = User
+    permission_classes = (AllowAny,)
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        parent_response = super(CreateUserView, self).create(request, *args, **kwargs)
+
+        if parent_response.status_code != 201:
+            return parent_response
+
+        username = parent_response.data.get('username')
+        user = User.objects.get(username=username)
+
+        token = Token.objects.create(user=user)
+        return Response({"token": token.key}, status=status.HTTP_201_CREATED)
+
 
 
 class MarketNewsView(APIView):
