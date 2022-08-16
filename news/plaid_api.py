@@ -61,6 +61,21 @@ def get_holdings(access_token):
     holdings_request = InvestmentsHoldingsGetRequest(access_token=access_token)
     holdings_response = client.investments_holdings_get(holdings_request)
     result = holdings_response.to_dict()
-    del result['item']
-    del result['request_id']
-    return result
+
+    # Clean the response to focus on the data we need in the structure we need it in
+    holdings = holdings_response['holdings']
+    securities = holdings_response['securities']
+
+    securities_lookup = {security['security_id']: security for security in securities}
+    holdings_with_security_info = []
+    for holding in holdings:
+        security_id = holding['security_id']
+        security = securities_lookup[security_id]
+        holdings_with_security_info.append({**security.to_dict(), **holding.to_dict()})
+
+    investment_balance = 0
+    for account in holdings_response['accounts']:
+        balances = account['balances']
+        investment_balance += balances['current']
+
+    return {'balance': investment_balance, 'holdings': holdings_with_security_info}

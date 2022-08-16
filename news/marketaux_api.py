@@ -7,41 +7,47 @@ BASE_API_PARAMS = {
     'language': ['en'],
 }
 DEFAULT_DOMAINS = [
-    # 'seekingalpha.com',
-    # 'foxbusiness.com',
-    # 'wsj.com',
-    # 'money.cnn.com',
-    # 'investopedia.com',
-    # 'finance.yahoo.com',
-    # 'forbes.com',
-    # 'bloomberg.com',
-    # 'cnbc.com',
-    # 'cnn.com',
+    'seekingalpha.com',
+    'foxbusiness.com',
+    'wsj.com',
+    'money.cnn.com',
+    'investopedia.com',
+    'finance.yahoo.com',
+    'forbes.com',
+    'bloomberg.com',
+    'cnbc.com',
+    'cnn.com',
     'marketwatch.com',
-    # 'nytimes.com',
-    # 'reuters.com',
-    # 'thestreet.com',
+    'nytimes.com',
+    'reuters.com',
+    'thestreet.com',
 ]
 
 DEFAULT_SYMBOLS = [
-    # 'TSLA',
-    # 'GME',
-    # 'AMC',
-    # 'HOOD',
-    # 'COIN',
-    # 'NIO',
-    # 'RIVN',
+    'TSLA',
+    'GME',
+    'AMC',
+    'HOOD',
+    'COIN',
+    'NIO',
+    'RIVN',
     'AAPL',
-    # 'COIN',
+    'COIN',
 ]
 
 
-def get_endpoint(endpoint: str, **EXTRA_PARAMS):
+def get_endpoint(endpoint: str, **extra_params):
     endpoint_url = API_URL + endpoint
     request_params = {
         **BASE_API_PARAMS,
-        **EXTRA_PARAMS,
+        **extra_params,
     }
+
+    # Stringify parameters with a list as a value
+    for name, value in request_params.items():
+        if type(value) == list:
+            request_params[name] = ','.join(value)
+
     response = requests.get(endpoint_url, params=request_params)
     return response.json()
 
@@ -61,7 +67,6 @@ def get_all_pages(get_page):
         found = page_meta['found']
         limit = page_meta['limit']
         pages_left = page_number * limit < found
-        print(page_number, found, limit, pages_left)
 
         page_number += 1
 
@@ -69,12 +74,27 @@ def get_all_pages(get_page):
 
 
 def get_market_news(symbols=None, page=1):
-    return get_endpoint(
+    news_results = get_endpoint(
         'news/all',
         domains=DEFAULT_DOMAINS,
         page=page,
-        symbols=DEFAULT_SYMBOLS
+        symbols=symbols if symbols else DEFAULT_SYMBOLS
     )
+
+    # Filter the matching entities for each article if a list of symbols is provided
+    if symbols:
+        symbol_lookup = set(symbols)
+        for article in news_results['data']:
+            article['entities'] = list(filter(
+                lambda entity: entity['symbol'] in symbol_lookup,
+                article['entities']
+            ))
+
+    return news_results
+
+
+def search_entities(search_value: str):
+    return get_endpoint('entity/search', search=search_value)
 
 
 def get_sources(page=1):

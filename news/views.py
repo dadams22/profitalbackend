@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from .marketaux_api import get_market_news
+from .marketaux_api import get_market_news, search_entities
 from .plaid_api import obtain_link_token, exchange_public_token, get_holdings
 from .models import User
 from .serializers import UserSerializer
@@ -30,14 +30,44 @@ class CreateUserView(CreateAPIView):
         return Response({"token": token.key}, status=status.HTTP_201_CREATED)
 
 
-
 class MarketNewsView(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         page = request.GET.get('page', 1)
-        return Response(get_market_news(page=page))
+
+        user = self.request.user
+        access_token = user.plaid_access_token
+
+        tickers = None
+        holdings = None
+        if access_token:
+            holdings_info = get_holdings(access_token)
+            holdings = holdings_info['holdings']
+            tickers = [holding['ticker_symbol'] for holding in holdings]
+
+        news_results = get_market_news(symbols=tickers, page=page)
+
+        if holdings:
+            holdings_by_ticker = {holding['ticker_symbol']: holding for holding in holdings}
+            for article in news_results['data']:
+                for entity in article['entities']:
+                    # print(entity)
+                    ticker = entity['symbol']
+                    entity['holding_info'] = holdings_by_ticker[ticker]
+
+        return Response(news_results)
+
+
+class EntitySearchView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        search_value = self.request.GET.get('search')
+        search_result = search_entities(search_value)
+        return Response(search_result)
 
 
 class PlaidTokenView(APIView):
@@ -68,6 +98,7 @@ class PlaidHoldingsView(APIView):
     def get(self, request):
         user = self.request.user
         access_token = user.plaid_access_token
+
         holdings = get_holdings(access_token)
-        print(holdings)
+
         return Response(holdings)
