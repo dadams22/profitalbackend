@@ -35,6 +35,11 @@ DEFAULT_SYMBOLS = [
     'COIN',
 ]
 
+DEFAULT_EXCHANGES = [
+    'NYSE',
+    'NASDAQ',
+]
+
 
 def get_endpoint(endpoint: str, **extra_params):
     endpoint_url = API_URL + endpoint
@@ -94,7 +99,7 @@ def get_market_news(symbols=None, page=1):
 
 
 def search_entities(search_value: str):
-    return get_endpoint('entity/search', search=search_value)
+    return get_endpoint('entity/search', search=search_value, exchanges=DEFAULT_EXCHANGES, types=['equity', 'etf'])
 
 
 def get_sources(page=1):
