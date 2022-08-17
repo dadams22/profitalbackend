@@ -4,6 +4,14 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_plaid_connected = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'is_plaid_connected')
+        write_only_fields = ('password',)
+        read_only_fields = ('is_plaid_connected',)
+
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -12,7 +20,5 @@ class UserSerializer(serializers.ModelSerializer):
         )
         return user
 
-    class Meta:
-        model = User
-        fields = ('email', 'username', 'password')
-        write_only_fields = ('password',)
+    def get_is_plaid_connected(self, user) -> bool:
+        return user.plaid_access_token is not None

@@ -30,6 +30,17 @@ class CreateUserView(CreateAPIView):
         return Response({"token": token.key}, status=status.HTTP_201_CREATED)
 
 
+class GetUserView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = self.request.user
+        serialized_user = UserSerializer(user)
+
+        return Response(serialized_user.data)
+
+
 class MarketNewsView(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
