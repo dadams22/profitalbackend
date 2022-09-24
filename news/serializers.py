@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'is_plaid_connected')
+        fields = ('email', 'username', 'password', 'is_plaid_connected')
         write_only_fields = ('password',)
         read_only_fields = ('is_plaid_connected',)
 

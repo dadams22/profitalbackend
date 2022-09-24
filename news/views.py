@@ -27,7 +27,8 @@ class CreateUserView(CreateAPIView):
         user = User.objects.get(username=username)
 
         token = Token.objects.create(user=user)
-        return Response({"token": token.key}, status=status.HTTP_201_CREATED)
+        user.refresh_from_db()
+        return Response({"token": token.key, "user": user}, status=status.HTTP_201_CREATED)
 
 
 class GetUserView(APIView):
