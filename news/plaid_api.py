@@ -67,10 +67,12 @@ def get_holdings(access_token):
 
     securities_lookup = {security['security_id']: security for security in securities}
     holdings_with_security_info = []
+    currencies = []
     for holding in holdings:
         security_id = holding['security_id']
         security = securities_lookup[security_id]
-        holdings_with_security_info.append({**security.to_dict(), **holding.to_dict()})
+        category = currencies if security['type'] == 'cash' else holdings_with_security_info
+        category.append({**security.to_dict(), **holding.to_dict()})
 
     investment_balance = 0
     for account in holdings_response['accounts']:
@@ -79,4 +81,6 @@ def get_holdings(access_token):
 
     holdings_with_security_info.sort(key=lambda holding: holding['ticker_symbol'])
 
-    return {'balance': investment_balance, 'holdings': holdings_with_security_info}
+    print(holdings_with_security_info)
+
+    return {'balance': investment_balance, 'holdings': holdings_with_security_info, 'currencies': currencies}
