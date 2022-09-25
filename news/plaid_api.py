@@ -83,4 +83,8 @@ def get_holdings(access_token):
 
     print(holdings_with_security_info)
 
-    return {'balance': investment_balance, 'holdings': holdings_with_security_info, 'currencies': currencies}
+    return {
+        'balance': investment_balance, 
+        'holdings': holdings_with_security_info, 
+        'currencies': currencies,
+    }
