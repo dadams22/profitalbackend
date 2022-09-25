@@ -27,8 +27,17 @@ class CreateUserView(CreateAPIView):
         user = User.objects.get(username=username)
 
         token = Token.objects.create(user=user)
+
+        plaid_link_token = obtain_link_token(user.id)
+
         user.refresh_from_db()
-        return Response({"token": token.key, "user": user}, status=status.HTTP_201_CREATED)
+        serialized_user = UserSerializer(user)
+
+        return Response({
+            "token": token.key, 
+            "user": serialized_user.data,
+            "plaid_link_token": plaid_link_token,
+        }, status=status.HTTP_201_CREATED)
 
 
 class GetUserView(APIView):
