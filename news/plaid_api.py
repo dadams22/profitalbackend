@@ -60,7 +60,6 @@ def exchange_public_token(public_token: str):
 def get_holdings(access_token):
     holdings_request = InvestmentsHoldingsGetRequest(access_token=access_token)
     holdings_response = client.investments_holdings_get(holdings_request)
-    result = holdings_response.to_dict()
 
     # Clean the response to focus on the data we need in the structure we need it in
     holdings = holdings_response['holdings']
@@ -77,5 +76,7 @@ def get_holdings(access_token):
     for account in holdings_response['accounts']:
         balances = account['balances']
         investment_balance += balances['current']
+
+    holdings_with_security_info.sort(key=lambda holding: holding['ticker_symbol'])
 
     return {'balance': investment_balance, 'holdings': holdings_with_security_info}
